@@ -1,0 +1,5 @@
+#Sample settings
+
+export HOST=''
+export PORT=210
+export DB_NAME=''

@@ -1,0 +1,4 @@
+pymarc
+#for PyZ3950
+ply
+git+https://github.com/asl2/PyZ3950.git
