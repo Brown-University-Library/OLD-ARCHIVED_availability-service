@@ -25,7 +25,11 @@ class HeldRecord(object):
 
     def barcodes(self):
         """
-        Get the item barcodes associated with the item.
+        Get the item barcodes associated with the record.
+
+        ToDo - see if there is some system limit on the number of items
+        returned by this service.  I recall that being a problem in the
+        past.
         """
         items = self.get_fields('945') or []
         out = []
