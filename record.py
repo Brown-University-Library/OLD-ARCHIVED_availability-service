@@ -22,3 +22,20 @@ class HeldRecord(object):
         out['id'] = self['907']['a'].lstrip('.')[:8]
         out['url'] = 'http://josiah.brown.edu/record=%s' % out['id']
         return out
+
+    def barcodes(self):
+        """
+        Get the item barcodes associated with the item.
+        """
+        items = self.get_fields('945') or []
+        out = []
+        for item in items:
+            bc = item['i'].replace(' ', '')
+            number = item['y'].lstrip('.')
+            loc = item['l'].strip()
+            #This seems to be the second half of the callnumber only.
+            call = item['c']
+            d = dict(barcode=bc, item=number, location=loc, callnumber=call)
+            out.append(d)
+        return out
+

@@ -3,6 +3,7 @@ Z39.50 searching.
 """
 import logging
 import os
+import re
 
 from PyZ3950 import zoom
 
@@ -16,6 +17,9 @@ def get_env(name):
         raise Exception("Can't find environment variable {0}.".format(name))
     return val
 
+#Used to determine if publicNote is an actual status
+#or a summary holdings statement.
+STATUS = re.compile('[A-Z]{2,}')
 
 class Search(object):
     """
@@ -45,16 +49,46 @@ class Search(object):
             return []
         out = []
         for meta, item in held:
-            d = {}
-            d['callnumber'] = item.callNumber
-            d['location'] = item.localLocation
             try:
                 note = item.publicNote
             except AttributeError:
                 note = None
+            #Skip summary holdings
+            if STATUS.search(note) is None:
+                continue
+            d = {}
+            d['callnumber'] = item.callNumber
+            d['location'] = item.localLocation
             d['availability'] = note
             out.append(d)
             #import ipdb; ipdb.set_trace();
+        return out
+
+    def _summary_holdings(self, rsp):
+        """
+        Get the summary holdings for a bib.  e.g.:
+        Lib. Has Bd.21- 1994-
+        """
+        try:
+            held = rsp.data.holdingsData
+        except AttributeError:
+            return []
+        out = []
+        for _, item in held:
+            try:
+                pn = item.publicNote
+            except AttributeError:
+                continue
+            #If this note doesn't match STATUS regex
+            #then it is a summary holdings statement.
+            if STATUS.search(pn) is None:
+                out.append(
+                    dict(
+                        callnumber=item.callNumber,
+                        location=item.localLocation,
+                        held=pn
+                    )
+                )
         return out
 
 
@@ -77,6 +111,8 @@ class Search(object):
                 out = bib.title_meta()
                 #Held items
                 out['items'] = held
+                out['summary'] = self._summary_holdings(result)
+                out['barcodes'] = bib.barcodes()
                 found.append(out)
         except zoom.Bib1Err:
             pass
