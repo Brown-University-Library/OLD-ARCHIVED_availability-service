@@ -18,9 +18,9 @@ if __name__ == "__main__":
     #ToDo: collect test items
     book = 'b3386235'
     journal = 'b4074295'
-    #online journal
+    online_journal = 'b7091233'
 
-    rsp = z39.id(journal)
+    rsp = z39.id(online_journal)
 
     print(json.dumps(rsp, indent=2))
 

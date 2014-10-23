@@ -34,7 +34,9 @@ class HeldRecord(object):
         items = self.get_fields('945') or []
         out = []
         for item in items:
-            bc = item['i'].replace(' ', '')
+            bc = item['i']
+            if bc is not None:
+                bc = bc.replace(' ', '')
             number = item['y'].lstrip('.')
             loc = item['l'].strip()
             #This seems to be the second half of the callnumber only.

@@ -59,9 +59,11 @@ class Search(object):
             d = {}
             d['callnumber'] = item.callNumber
             d['location'] = item.localLocation
+            #Skip online "items"
+            #if d['location'] == ('ONLINE SERIAL' or 'ONLINE BOOK'):
+            #    continue
             d['availability'] = note
             out.append(d)
-            #import ipdb; ipdb.set_trace();
         return out
 
     def _summary_holdings(self, rsp):
