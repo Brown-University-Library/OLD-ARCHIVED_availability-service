@@ -17,10 +17,14 @@ if __name__ == "__main__":
 
     #ToDo: collect test items
     book = 'b3386235'
+    journal = 'b4074295'
+    online_journal = 'b7091233'
 
-
-    rsp = z39.id(book)
+    rsp = z39.id(online_journal)
 
     print(json.dumps(rsp, indent=2))
+
+    print len(rsp[0]['items'])
+    print len(rsp[0]['barcodes'])
 
     z39.close()
