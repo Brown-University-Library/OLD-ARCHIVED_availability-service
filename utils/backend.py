@@ -27,9 +27,9 @@ class Search(object):
     """
     def __init__(self):
         self.conn = zoom.Connection(
-            get_env('HOST'),
-            int(get_env('PORT')),
-            databaseName=get_env('DB_NAME'),
+            get_env('availability_HOST'),
+            int(get_env('availability_PORT')),
+            databaseName=get_env('availability_DB_NAME'),
             #Getting records in "opac" format.
             preferredRecordSyntax='OPAC',
             charset='utf-8',
