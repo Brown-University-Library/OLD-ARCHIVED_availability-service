@@ -1,0 +1,6 @@
+Flask==0.10.1
+pymarc==3.0.2
+#for PyZ3950
+ply==3.4
+#(tested version: PyZ3950==2.04)
+git+https://github.com/asl2/PyZ3950.git
