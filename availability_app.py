@@ -2,7 +2,7 @@
 
 import datetime, json, os, pprint
 import flask
-from availability_service.utils import log_helper
+from availability_service.utils import backend, log_helper
 
 
 ## setup
@@ -26,9 +26,8 @@ def handler( key, value ):
     if not validation == u'good':
         return_dict = { u'query': query, u'response': {u'error': validation} }
         return flask.jsonify( return_dict )
-    response = { u'message': u'coming' }
-    return_dict = { u'query': query, u'response': response }
-    return flask.jsonify( return_dict )
+    response = helper.build_response_dict( key, value )
+    return flask.jsonify( {u'query': query, u'response': response} )
 
 
 class HandlerHelper( object ):
@@ -59,6 +58,20 @@ class HandlerHelper( object ):
             message = u'good'
         log.debug( u'- in validate(); message, %s' % message )
         return message
+
+    def build_response_dict( self, key, value ):
+        """ Stub for z39.50 call and response. """
+        if key == u'bib':
+            z39 = backend.Search()
+            rsp = z39.id( value )
+            log.debug( u'in availability_app.HandlerHelper.build_response_dict; rsp, `%s`' % unicode(repr(rsp)) )
+            z39.close()
+            output = unicode(repr(rsp))
+            log.debug( u'in availability_app.HandlerHelper.build_response_dict; rsp NOW, `%s`' % output )
+            response = { u'backend response': output }
+        else:
+            response = { u'backend response': u'coming' }
+        return response
 
     # end class HandlerHelper
 
