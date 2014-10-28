@@ -19,7 +19,7 @@ def hello_world():
 
 @app.route( u'/v2/<key>/<value>/', methods=['GET'] )  # eg, /availability_service/v2/bib/b1234/
 def handler( key, value ):
-    log.debug( u'- in availability_app.handler(); starting' )
+    log.debug( u'in availability_app.handler(); starting' )
     helper = HandlerHelper()
     query = helper.build_query_dict( flask.request.url, key, value )
     validation = helper.validate( key, value )
@@ -56,18 +56,18 @@ class HandlerHelper( object ):
             message = u'service_id bad'
         if message == u'init':
             message = u'good'
-        log.debug( u'- in validate(); message, %s' % message )
+        log.debug( u'in validate(); message, %s' % message )
         return message
 
     def build_response_dict( self, key, value ):
         """ Stub for z39.50 call and response. """
         if key == u'bib':
-            z39 = backend.Search()
+            z39 = backend.Search( log )
             rsp = z39.id( value )
-            log.debug( u'in availability_app.HandlerHelper.build_response_dict; rsp, `%s`' % unicode(repr(rsp)) )
+            log.debug( u'in availability_app.HandlerHelper.build_response_dict(); rsp, `%s`' % unicode(repr(rsp)) )
             z39.close()
             output = unicode(repr(rsp))
-            log.debug( u'in availability_app.HandlerHelper.build_response_dict; rsp NOW, `%s`' % output )
+            log.debug( u'in availability_app.HandlerHelper.build_response_dict(); rsp NOW, `%s`' % output )
             response = { u'backend response': output }
         else:
             response = { u'backend response': u'coming' }

@@ -1,7 +1,6 @@
 """
 Z39.50 searching.
 """
-import logging
 import os
 import re
 
@@ -25,7 +24,7 @@ class Search(object):
     """
     A set of methods for searching a Z39.50 server.
     """
-    def __init__(self):
+    def __init__(self, logger):
         self.conn = zoom.Connection(
             get_env('availability_HOST'),
             int(get_env('availability_PORT')),
@@ -34,9 +33,10 @@ class Search(object):
             preferredRecordSyntax='OPAC',
             charset='utf-8',
         )
+        self.logger = logger
 
     def close(self):
-        logging.debug('Closing connection.')
+        self.logger.debug('in backend.Search.close(); Closing connection.')
         return self.conn.close()
 
     def _holdings(self, rsp):
@@ -100,7 +100,7 @@ class Search(object):
         structure.
         """
         qstring = '%s %s' % (base, qs)
-        logging.debug("Query: {0}".format(qstring))
+        self.logger.debug("in backend.Search.findrecs(); Query: {0}".format(qstring))
         query = zoom.Query('PQF', qstring)
         result_set = self.conn.search(query)
         found = []
