@@ -101,8 +101,14 @@ class Search(object):
         """
         qstring = '%s %s' % (base, qs)
         self.logger.debug("in backend.Search.findrecs(); Query: {0}".format(qstring))
-        query = zoom.Query('PQF', qstring)
-        result_set = self.conn.search(query)
+        try:
+            query = zoom.Query('PQF', qstring)
+        except Exception as e:
+            self.logger.debug( "in backend.Search.findrecs(); Exception on query: {0}".format(unicode(repr(e))) )
+        try:
+            result_set = self.conn.search(query)
+        except Exception as f:
+            self.logger.debug( "in backend.Search.findrecs(); Exception on conn.search: {0}".format(unicode(repr(f))) )
         found = []
         try:
             for result in result_set[:limit]:
