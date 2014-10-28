@@ -34,6 +34,7 @@ class Search(object):
             charset='utf-8',
         )
         self.logger = logger
+        self.working_dir = get_env( 'availability_CURWRKDIR' )
 
     def close(self):
         self.logger.debug('in backend.Search.close(); Closing connection.')
@@ -101,11 +102,17 @@ class Search(object):
         """
         qstring = '%s %s' % (base, qs)
         self.logger.debug( "in backend.Search.findrecs(); Query, {0}".format(qstring) )
-        self.logger.debug( "in backend.Search.findrecs(); cwd, `{0}`".format(os.getcwd()) )
+        self.logger.debug( "in backend.Search.findrecs(); target cwd, `{0}`".format(self.working_dir) )
+        self.logger.debug( "in backend.Search.findrecs(); initial cwd, `{0}`".format(os.getcwd()) )
+        initial_working_dir = os.getcwd()
+        os.chdir( self.working_dir )
+        self.logger.debug( "in backend.Search.findrecs(); active cwd, `{0}`".format(os.getcwd()) )
         try:
             query = zoom.Query('PQF', qstring)
         except Exception as e:
             self.logger.debug( "in backend.Search.findrecs(); Exception on query: {0}".format(unicode(repr(e))) )
+        os.chdir( initial_working_dir )
+        self.logger.debug( "in backend.Search.findrecs(); final cwd, `{0}`".format(os.getcwd()) )
         try:
             result_set = self.conn.search(query)
         except Exception as f:
