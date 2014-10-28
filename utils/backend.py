@@ -100,7 +100,8 @@ class Search(object):
         structure.
         """
         qstring = '%s %s' % (base, qs)
-        self.logger.debug("in backend.Search.findrecs(); Query: {0}".format(qstring))
+        self.logger.debug( "in backend.Search.findrecs(); Query, {0}".format(qstring) )
+        self.logger.debug( "in backend.Search.findrecs(); cwd, `{0}`".format(os.getcwd()) )
         try:
             query = zoom.Query('PQF', qstring)
         except Exception as e:
