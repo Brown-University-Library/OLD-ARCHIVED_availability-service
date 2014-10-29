@@ -1,4 +1,7 @@
-import logging
+import json, logging
+from backend import Search
+
+
 formatter = logging.Formatter(u'%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -7,13 +10,10 @@ console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
 
-from backend import Search
-import json
-
 
 if __name__ == "__main__":
 
-    z39 = Search()
+    z39 = Search( logger )
 
     #ToDo: collect test items
     book = 'b3386235'
