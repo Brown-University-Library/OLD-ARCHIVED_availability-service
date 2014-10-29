@@ -2,10 +2,11 @@
 Z39.50 searching.
 """
 import os
+os.chdir( os.getenv('availability_CURWRKDIR') )
+
 import re
 
 from PyZ3950 import zoom
-
 from record import HeldRecord
 from pymarc import Record
 Record.__bases__ += (HeldRecord,)
@@ -34,7 +35,6 @@ class Search(object):
             charset='utf-8',
         )
         self.logger = logger
-        self.working_dir = get_env( 'availability_CURWRKDIR' )
 
     def close(self):
         self.logger.debug('in backend.Search.close(); Closing connection.')
@@ -102,21 +102,10 @@ class Search(object):
         """
         qstring = '%s %s' % (base, qs)
         self.logger.debug( "in backend.Search.findrecs(); Query, {0}".format(qstring) )
-        self.logger.debug( "in backend.Search.findrecs(); target cwd, `{0}`".format(self.working_dir) )
-        self.logger.debug( "in backend.Search.findrecs(); initial cwd, `{0}`".format(os.getcwd()) )
-        initial_working_dir = os.getcwd()
-        os.chdir( self.working_dir )
-        self.logger.debug( "in backend.Search.findrecs(); active cwd, `{0}`".format(os.getcwd()) )
-        try:
-            query = zoom.Query('PQF', qstring)
-        except Exception as e:
-            self.logger.debug( "in backend.Search.findrecs(); Exception on query: {0}".format(unicode(repr(e))) )
-        os.chdir( initial_working_dir )
-        self.logger.debug( "in backend.Search.findrecs(); final cwd, `{0}`".format(os.getcwd()) )
-        try:
-            result_set = self.conn.search(query)
-        except Exception as f:
-            self.logger.debug( "in backend.Search.findrecs(); Exception on conn.search: {0}".format(unicode(repr(f))) )
+        query = zoom.Query('PQF', qstring)
+        self.logger.debug( "in backend.Search.findrecs(); query ok" )
+        result_set = self.conn.search(query)
+        self.logger.debug( "in backend.Search.findrecs(); result_set ok" )
         found = []
         try:
             for result in result_set[:limit]:
