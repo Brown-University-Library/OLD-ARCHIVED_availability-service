@@ -2,8 +2,6 @@
 Z39.50 searching.
 """
 import os
-os.chdir( os.getenv('availability_CURWRKDIR') )
-
 import re
 
 from PyZ3950 import zoom
