@@ -24,6 +24,8 @@ class z39Test( unittest.TestCase ):
         self.book_bib = 'b3386235'
         self.journal_bib = 'b4074295'
         self.online_journal_bib = 'b7091233'
+        self.oclc_num = 'ocm41356566'
+        self.isbn = '0688002307'
 
     def tearDown(self):
         self.z39.close()
@@ -39,8 +41,7 @@ class z39Test( unittest.TestCase ):
     def test_z39_book(self):
         """ Tests returned book data. """
         ## service returns list
-        rsp = self.z39.id( self.book_bib )
-        # print( json.dumps(rsp, indent=2) )
+        rsp = self.z39.id( self.book_bib )  # print( json.dumps(rsp, indent=2) )
         expected = list
         self.assertEqual( expected, type(rsp) )
         ## list of dicts
@@ -68,6 +69,21 @@ class z39Test( unittest.TestCase ):
         item = rsp[0]
         expected = ['barcodes', 'id', 'isbn', 'items', 'lccn', 'summary', 'title', 'url']
         self.assertEqual( expected, sorted(item.keys()) )
+
+    def test_oclc_book(self):
+        """ Tests returned book data. """
+        rsp = self.z39.oclc( self.oclc_num )
+        item = rsp[0]
+        expected = ['barcodes', 'id', 'isbn', 'items', 'lccn', 'oclc', 'summary', 'title', 'url']
+        self.assertEqual( expected, sorted(item.keys()) )
+
+    def test_isbn_book(self):
+        """ Tests returned book data. """
+        rsp = self.z39.isbn( self.isbn )
+        item = rsp[0]
+        expected = ['barcodes', 'id', 'isbn', 'items', 'lccn', 'oclc', 'summary', 'title', 'url']
+        self.assertEqual( expected, sorted(item.keys()) )
+
 
 
 
