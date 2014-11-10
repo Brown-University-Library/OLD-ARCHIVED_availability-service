@@ -3,6 +3,7 @@
 import datetime, json, os, pprint
 import flask
 from availability_service.utils import backend, log_helper
+from werkzeug.contrib.cache import FileSystemCache
 
 
 ## setup
@@ -63,7 +64,6 @@ class HandlerHelper( object ):
 
     def build_response_dict( self, key, value ):
         """ Stub for cached z39.50 call and response. """
-        from werkzeug.contrib.cache import FileSystemCache
         assert type(value) == unicode
         cache = FileSystemCache( self.cache_dir, threshold=500, default_timeout=self.cache_minutes, mode=0664 )  # http://werkzeug.pocoo.org/docs/0.9/contrib/cache/
         cache_key = u'%s_%s' % ( key, value )
