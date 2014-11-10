@@ -136,4 +136,3 @@ class Search(object):
     def oclc(self, qs, sleep=False):
         base ='@attr 1=1007'
         return self.findrecs(base, qs, sleep)
-
