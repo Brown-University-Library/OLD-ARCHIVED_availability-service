@@ -3,6 +3,7 @@
 import datetime, json, os, pprint
 import flask
 from availability_service.utils import backend, log_helper
+from werkzeug.contrib.cache import FileSystemCache
 
 
 ## setup
@@ -37,13 +38,15 @@ class HandlerHelper( object ):
 
     def __init__( self ):
         self.legit_services = [ u'bib', u'isbn', u'oclc' ]  # will enhance; possible TODO: load from yaml config file
+        self.cache_dir = os.getenv( u'availability_CACHE_DIR' )
+        self.cache_minutes = int( os.getenv(u'availability_CACHE_MINUTES') ) * 60  # timeout param requires seconds
 
     def build_query_dict( self, url, key, value ):
         """ Query reflector. """
         start_time = datetime.datetime.now()
         query_dict = {
             u'url': url,
-            u'start_time': unicode(start_time),
+            u'query_timestamp': unicode(start_time),
             u'service_id': key,
             u'service_value': value
             }
@@ -60,19 +63,22 @@ class HandlerHelper( object ):
         return message
 
     def build_response_dict( self, key, value ):
-        """ Stub for z39.50 call and response. """
+        """ Stub for cached z39.50 call and response. """
         assert type(value) == unicode
+        cache = FileSystemCache( self.cache_dir, threshold=500, default_timeout=self.cache_minutes, mode=0664 )  # http://werkzeug.pocoo.org/docs/0.9/contrib/cache/
+        cache_key = u'%s_%s' % ( key, value )
         if key == u'bib':
-            z39 = backend.Search( log )
-            rsp = z39.id( value.encode(u'utf-8') )
-            log.debug( u'in availability_app.HandlerHelper.build_response_dict(); rsp, `%s`' % unicode(repr(rsp)) )
-            z39.close()
-            output = unicode(repr(rsp))
-            log.debug( u'in availability_app.HandlerHelper.build_response_dict(); rsp NOW, `%s`' % output )
-            response = { u'backend response': output }
+            response_dict = cache.get( cache_key )
+            if response_dict is None:
+                z39 = backend.Search( log )
+                rsp_list = z39.id( value.encode(u'utf-8') )
+                z39.close()
+                output = unicode(repr(rsp_list))
+                response_dict = { u'backend_response': output, u'response_timestamp': unicode(datetime.datetime.now()) }
+                cache.set( cache_key, response_dict )
         else:
-            response = { u'backend response': u'coming' }
-        return response
+            response_dict = { u'backend_response': u'coming' }
+        return response_dict
 
     # end class HandlerHelper
 
