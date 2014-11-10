@@ -61,9 +61,10 @@ class HandlerHelper( object ):
 
     def build_response_dict( self, key, value ):
         """ Stub for z39.50 call and response. """
+        assert type(value) == unicode
         if key == u'bib':
             z39 = backend.Search( log )
-            rsp = z39.id( value )
+            rsp = z39.id( value.encode(u'utf-8') )
             log.debug( u'in availability_app.HandlerHelper.build_response_dict(); rsp, `%s`' % unicode(repr(rsp)) )
             z39.close()
             output = unicode(repr(rsp))
