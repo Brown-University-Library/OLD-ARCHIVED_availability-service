@@ -80,7 +80,6 @@ class z39Test( unittest.TestCase ):
     def test_isbn_book(self):
         """ Tests returned book data. """
         rsp = self.z39.isbn( self.isbn )
-        # print( json.dumps(rsp, indent=2) )
         item = rsp[0]
         expected = ['barcodes', 'id', 'isbn', 'items', 'lccn', 'oclc', 'summary', 'title', 'url']
         self.assertEqual( expected, sorted(item.keys()) )

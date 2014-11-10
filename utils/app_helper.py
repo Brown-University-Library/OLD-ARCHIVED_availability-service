@@ -42,11 +42,10 @@ class HandlerHelper( object ):
         return message
 
     def build_response_dict( self, key, value ):
-        """ Stub for cached z39.50 call and response.
+        """ Handler for cached z39.50 call and response.
             Called by availability_service.availability_app.handler(). """
         assert type(value) == unicode
-        cache = FileSystemCache( self.cache_dir, threshold=500, default_timeout=1, mode=0664 )  # http://werkzeug.pocoo.org/docs/0.9/contrib/cache/
-        # cache = FileSystemCache( self.cache_dir, threshold=500, default_timeout=self.cache_minutes, mode=0664 )  # http://werkzeug.pocoo.org/docs/0.9/contrib/cache/
+        cache = FileSystemCache( self.cache_dir, threshold=500, default_timeout=self.cache_minutes, mode=0664 )  # http://werkzeug.pocoo.org/docs/0.9/contrib/cache/
         cache_key = u'%s_%s' % ( key, value )
         response_dict = cache.get( cache_key )
         if response_dict is None:
@@ -68,6 +67,5 @@ class HandlerHelper( object ):
             rsp_list = z39.oclc( utf8_value )
         z39.close()
         return { u'backend_response': unicode(repr(rsp_list)), u'response_timestamp': unicode(datetime.datetime.now()) }
-
 
     # end class HandlerHelper
