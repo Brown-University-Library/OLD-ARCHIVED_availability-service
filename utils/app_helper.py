@@ -10,7 +10,7 @@ from werkzeug.contrib.cache import FileSystemCache
 
 
 class HandlerHelper( object ):
-    """ Helpers for main api route. """
+    """ Helpers for main api route: availability_service.availability_app.handler() """
 
     def __init__( self, log ):
         self.legit_services = [ u'bib', u'isbn', u'issn', u'oclc' ]  # will enhance; possible TODO: load from yaml config file
