@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+"""
+backend.py unit tests
+"""
+
 import json, logging, unittest
 from backend import Search
 
@@ -13,7 +17,7 @@ logger.addHandler( console_handler )
 
 
 class z39Test( unittest.TestCase ):
-    """ Tests brown fork of PyZ3950. """
+    """ Tests backend.Search() wrapper around Brown's fork of PyZ3950. """
 
     def setUp(self):
         self.z39 = Search( logger )
