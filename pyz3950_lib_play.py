@@ -122,6 +122,8 @@ class Experimenter( object ):
             item_entry[u'isbn'] = self.make_isbn( marc_dict )
             item_entry[u'lccn'] = self.make_lccn( marc_dict )
             item_entry[u'bibid'] = self.make_bibid( marc_dict )
+            item_entry[u'josiah_bib_url'] = u'%s/record=%s' % ( u'https://josiah.brown.edu', item_entry[u'bibid'][1:-1] )  # removes period & check-digit
+            item_entry[u'oclc_brown'] = self.make_oclc_brown( marc_dict )
             item_list.append( item_entry )
         exp.logger.debug( u'in play.Experimenter.build_items(); pprint.pformat(item_list), `%s`' % pprint.pformat(item_list) )
         return item_list
@@ -151,7 +153,7 @@ class Experimenter( object ):
         return callnumber
 
     def make_marc_itemid( self, marc_dict ):
-        itemid = u'itemid_not_availale'
+        itemid = u'itemid_not_available'
         for field in marc_dict[u'fields']:
             ( key, val ) = field.items()[0]
             if key == u'945':
@@ -164,7 +166,7 @@ class Experimenter( object ):
         return itemid
 
     def make_marc_barcode( self, marc_dict ):
-        barcode = u'barcode_not_availale'
+        barcode = u'barcode_not_available'
         for field in marc_dict[u'fields']:
             ( key, val ) = field.items()[0]
             if key == u'945':
@@ -177,7 +179,7 @@ class Experimenter( object ):
         return barcode
 
     def make_isbn( self, marc_dict ):
-        isbn = u'isbn_not_availale'
+        isbn = u'isbn_not_available'
         for field in marc_dict[u'fields']:
             ( key, val ) = field.items()[0]
             if key == u'020':
@@ -190,7 +192,7 @@ class Experimenter( object ):
         return isbn
 
     def make_lccn( self, marc_dict ):
-        lccn = u'lccn_not_availale'
+        lccn = u'lccn_not_available'
         for field in marc_dict[u'fields']:
             ( key, val ) = field.items()[0]
             if key == u'010':
@@ -203,7 +205,7 @@ class Experimenter( object ):
         return lccn
 
     def make_bibid( self, marc_dict ):
-        bibid = u'bibid_not_availale'
+        bibid = u'bibid_not_available'
         for field in marc_dict[u'fields']:
             ( key, val ) = field.items()[0]
             if key == u'907':
@@ -214,6 +216,17 @@ class Experimenter( object ):
                         break
         exp.logger.debug( u'in play.Experimenter.make_bibid(); bibid, `%s`' % bibid )
         return bibid
+
+    def make_oclc_brown( self, marc_dict ):
+        oclc = u'oclc_not_available'
+        for field in marc_dict[u'fields']:
+            ( key, val ) = field.items()[0]
+            if key == u'001':
+                oclc = val
+                break
+        exp.logger.debug( u'in play.Experimenter.make_oclc(); oclc, `%s`' % oclc )
+        return oclc
+
 
 
 
