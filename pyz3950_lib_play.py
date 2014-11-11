@@ -103,25 +103,17 @@ class Experimenter( object ):
         exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(rec.data.holdingsData[0][1].callNumber, `%s`' % pprint.pformat(rec.data.holdingsData[0][1].callNumber) )
         return
 
-    def process_resultset( self, resultset ):
+    def process_resultset( self, resultset, raw_marc=False ):
         """ Iterates through resultset, extracting from marc-data and holdings-data. """
         item_list = []
         for result in resultset:
-            result_entry = {}
-            ## get raw marc data
+            ## start w/marc
             marc_record_object = Record( data=result.data.bibliographicRecord.encoding[1] )
-            marc_dict = marc_record_object.as_dict()
-            raw_marc = result.data.bibliographicRecord.encoding
-            result_entry[u'marc'] = raw_marc
-            result_entry[u'marc_dict'] = marc_dict
-            ## get processed data
-            item_entry = self.process_marc_data( marc_dict, marc_record_object )
-            ## get raw holdings data
+            item_entry = self.process_marc_data( marc_record_object )
+            ## add holdings
             holdings_record_data = result.data.holdingsData
             item_entry[u'holdings_data'] = self.process_holdings_data( holdings_record_data )
-            ## add to item_list
             item_list.append( item_entry )
-            ## return
         exp.logger.debug( u'in play.Experimenter.process_resultset, pprint.pformat(item_list), `%s`' % pprint.pformat(item_list) )
         return item_list
 
@@ -129,11 +121,7 @@ class Experimenter( object ):
         record_holdings_data = []
         for holdings_entry in holdings_data:
             entry = {}
-            exp.logger.debug( u'in play.Experimenter.process_holdings_data, pprint.pformat(holdings_entry), `%s`' % pprint.pformat(holdings_entry) )
-            exp.logger.debug( u'in play.Experimenter.process_holdings_data, pprint.pformat(holdings_entry[1]), `%s`' % pprint.pformat(holdings_entry[1]) )
             holdings_object = holdings_entry[1]
-            exp.logger.debug( u'in play.Experimenter.process_holdings_data, pprint.pformat(holdings_object), `%s`' % pprint.pformat(holdings_object) )
-
             entry[u'callNumber'] = holdings_object.callNumber
             entry[u'localLocation'] = holdings_object.localLocation
             entry[u'publicNote'] = holdings_object.publicNote
@@ -141,8 +129,11 @@ class Experimenter( object ):
         exp.logger.debug( u'in play.Experimenter.process_holdings_data, pprint.pformat(record_holdings_data), `%s`' % pprint.pformat(record_holdings_data) )
         return record_holdings_data
 
-    def process_marc_data( self, marc_dict, marc_record_object ):
+    def process_marc_data( self, marc_record_object, raw_marc=False ):
+        marc_dict = marc_record_object.as_dict()
         item_entry = {}
+        if raw_marc:
+            item_entry[u'raw_marc'] = marc_dict
         item_entry[u'title'] = marc_record_object.title()
         item_entry[u'callnumber'] = self.make_marc_callnumber( marc_dict )
         item_entry[u'itemid'] = self.make_marc_itemid( marc_dict )
