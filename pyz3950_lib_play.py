@@ -97,38 +97,60 @@ class Experimenter( object ):
         exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(pm_rec.as_dict()), `%s`' % pprint.pformat(pm_rec.as_dict()) )
         ## holdings
         exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(rec.data.holdingsData), `%s`' % pprint.pformat(rec.data.holdingsData) )
+        exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(rec.data.holdingsData[0]), `%s`' % pprint.pformat(rec.data.holdingsData[0]) )
+        exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(rec.data.holdingsData[0][0]), `%s`' % pprint.pformat(rec.data.holdingsData[0][0]) )
+        exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(rec.data.holdingsData[0][1].callNumber, `%s`' % pprint.pformat(rec.data.holdingsData[0][1].callNumber) )
         return
 
-    def extract_marc( self, resultset ):
-        """ Works with each result's `bibliographicRecord` data. """
-        marc_list = []
+    def process_resultset( self, resultset ):
+        """ Iterates through resultset, extracting from marc-data and holdings-data. """
+        item_list = []
         for result in resultset:
             result_entry = {}
+            ## get raw marc data
             result_entry[u'marc'] = result.data.bibliographicRecord.encoding
-            pm_rec = Record( data=result.data.bibliographicRecord.encoding[1] )
-            result_entry[u'marc_dict'] = pm_rec.as_dict()
-            exp.logger.debug( u'in play.Experimenter.extract_marc, pprint.pformat(result_entry), `%s`' % pprint.pformat(result_entry) )
-            marc_list.append( result_entry )
-        return marc_list
-
-    def build_items( self, marc_list ):
-        """ Builds initial item-list from marc. """
-        item_list = []
-        for marc_entry in marc_list:
-            item_entry = {}
-            marc_dict = marc_entry[u'marc_dict']
-            item_entry[u'brief_title'] = self.make_brief_title( marc_dict )
-            item_entry[u'callnumber'] = self.make_marc_callnumber( marc_dict )
-            item_entry[u'itemid'] = self.make_marc_itemid( marc_dict )
-            item_entry[u'item_barcode'] = self.make_marc_barcode( marc_dict )
-            item_entry[u'isbn'] = self.make_isbn( marc_dict )
-            item_entry[u'lccn'] = self.make_lccn( marc_dict )
-            item_entry[u'bibid'] = self.make_bibid( marc_dict )
-            item_entry[u'josiah_bib_url'] = u'%s/record=%s' % ( u'https://josiah.brown.edu', item_entry[u'bibid'][1:-1] )  # removes period & check-digit
-            item_entry[u'oclc_brown'] = self.make_oclc_brown( marc_dict )
+            marc_record_data = Record( data=result.data.bibliographicRecord.encoding[1] )
+            result_entry[u'marc_dict'] = marc_record_data.as_dict()
+            ## get processed data
+            item_entry = self.process_marc_data( result_entry[u'marc_dict'] )
+            ## get raw holdings data
+            holdings_record_data = result.data.holdingsData
+            item_entry[u'holdings_data'] = self.process_holdings_data( holdings_record_data )
+            ## add to item_list
             item_list.append( item_entry )
-        exp.logger.debug( u'in play.Experimenter.build_items(); pprint.pformat(item_list), `%s`' % pprint.pformat(item_list) )
+            ## return
+        exp.logger.debug( u'in play.Experimenter.process_resultset, pprint.pformat(item_list), `%s`' % pprint.pformat(item_list) )
         return item_list
+
+    def process_holdings_data( self, holdings_data ):
+        record_holdings_data = []
+        for holdings_entry in holdings_data:
+            entry = {}
+            exp.logger.debug( u'in play.Experimenter.process_holdings_data, pprint.pformat(holdings_entry), `%s`' % pprint.pformat(holdings_entry) )
+            exp.logger.debug( u'in play.Experimenter.process_holdings_data, pprint.pformat(holdings_entry[1]), `%s`' % pprint.pformat(holdings_entry[1]) )
+            holdings_object = holdings_entry[1]
+            exp.logger.debug( u'in play.Experimenter.process_holdings_data, pprint.pformat(holdings_object), `%s`' % pprint.pformat(holdings_object) )
+
+            entry[u'callNumber'] = holdings_object.callNumber
+            entry[u'localLocation'] = holdings_object.localLocation
+            entry[u'publicNote'] = holdings_object.publicNote
+            record_holdings_data.append( entry )
+        exp.logger.debug( u'in play.Experimenter.process_holdings_data, pprint.pformat(record_holdings_data), `%s`' % pprint.pformat(record_holdings_data) )
+        return record_holdings_data
+
+    def process_marc_data( self, marc_dict ):
+        item_entry = {}
+        item_entry[u'brief_title'] = self.make_brief_title( marc_dict )
+        item_entry[u'callnumber'] = self.make_marc_callnumber( marc_dict )
+        item_entry[u'itemid'] = self.make_marc_itemid( marc_dict )
+        item_entry[u'item_barcode'] = self.make_marc_barcode( marc_dict )
+        item_entry[u'isbn'] = self.make_isbn( marc_dict )
+        item_entry[u'lccn'] = self.make_lccn( marc_dict )
+        item_entry[u'bibid'] = self.make_bibid( marc_dict )
+        item_entry[u'josiah_bib_url'] = u'%s/record=%s' % ( u'https://josiah.brown.edu', item_entry[u'bibid'][1:-1] )  # removes period & check-digit
+        item_entry[u'oclc_brown'] = self.make_oclc_brown( marc_dict )
+        exp.logger.debug( u'in play.Experimenter.process_marc_data(); pprint.pformat(item_entry), `%s`' % pprint.pformat(item_entry) )
+        return item_entry
 
     def make_brief_title( self, marc_dict ):
         brief_title = u'title_not_available'
@@ -251,9 +273,7 @@ try:
     qobject = exp.build_qobject( qstring )
     resultset = exp.connection.search( qobject )
     exp.inspect_resultset( resultset )
-    marc_list = exp.extract_marc( resultset )
-    initial_item_list = exp.build_items( marc_list )
-    enhanced_item_list = exp.enhance_items( initial_item_list, resultset )
+    item_list = exp.process_resultset( resultset )
     1/0
 
 except Exception as e:
