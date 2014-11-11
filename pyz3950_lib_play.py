@@ -169,13 +169,15 @@ class Experimenter( object ):
         return brief_title
 
     def make_marc_callnumber( self, marc_dict ):
-        callnumber = []
+        ( callnumber, subfield_callnumber ) = ( u'callnumber_not_available', u'' )
         for field in marc_dict[u'fields']:
             ( key, val ) = field.items()[0]
-            if key == u'090':
+            if key == u'050' or key == u'090':
                 for subfield in field[key][u'subfields']:
                     ( key2, val2 ) = subfield.items()[0]
-                    callnumber.append( val2 )
+                    subfield_callnumber = u'%s %s' % (subfield_callnumber, val2)
+                callnumber = subfield_callnumber.strip()
+                break
         exp.logger.debug( u'in play.Experimenter.make_marc_callnumber(); callnumber, `%s`' % callnumber )
         return callnumber
 
@@ -252,7 +254,7 @@ try:
     resultset = exp.connection.search( qobject )
     exp.inspect_resultset( resultset )
     item_list = exp.process_resultset( resultset )
-    1/0
+    pprint.pprint( item_list )
 
 except Exception as e:
 
