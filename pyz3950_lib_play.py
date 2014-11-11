@@ -89,12 +89,14 @@ class Experimenter( object ):
         exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(rec.data), `%s`' % pprint.pformat(rec.data) )
         exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(rec.data.bibliographicRecord), `%s`' % pprint.pformat(rec.data.bibliographicRecord) )
         exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(rec.data.bibliographicRecord.encoding), `%s`' % pprint.pformat(rec.data.bibliographicRecord.encoding) )
+        ## marc
         pm_rec = Record( data=rec.data.bibliographicRecord.encoding[1] )
         exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(pm_rec), `%s`' % pprint.pformat(pm_rec) )
         exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(dir(pm_rec)), `%s`' % pprint.pformat(dir(pm_rec)) )
         exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(pm_rec.__dict__), `%s`' % pprint.pformat(pm_rec.__dict__) )
         exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(pm_rec.as_dict()), `%s`' % pprint.pformat(pm_rec.as_dict()) )
-        # exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(rec.data.holdingsData), `%s`' % pprint.pformat(rec.data.holdingsData) )
+        ## holdings
+        exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(rec.data.holdingsData), `%s`' % pprint.pformat(rec.data.holdingsData) )
         return
 
     def extract_marc( self, resultset ):
@@ -224,9 +226,14 @@ class Experimenter( object ):
             if key == u'001':
                 oclc = val
                 break
-        exp.logger.debug( u'in play.Experimenter.make_oclc(); oclc, `%s`' % oclc )
+        exp.logger.debug( u'in play.Experimenter.make_oclc_brown(); oclc, `%s`' % oclc )
         return oclc
 
+    def enhance_items( self, initial_item_list, resultset ):
+        """ Adds resultset holdings data to item-list. """
+        enhanced_item_list = [ u'foo' ]
+        exp.logger.debug( u'in play.Experimenter.enhance_items(); enhanced_item_list, `%s`' % enhanced_item_list )
+        return enhanced_item_list
 
 
 
@@ -246,6 +253,7 @@ try:
     exp.inspect_resultset( resultset )
     marc_list = exp.extract_marc( resultset )
     initial_item_list = exp.build_items( marc_list )
+    enhanced_item_list = exp.enhance_items( initial_item_list, resultset )
     1/0
 
 except Exception as e:
