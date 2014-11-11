@@ -94,24 +94,20 @@ class Experimenter( object ):
         exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(dir(pm_rec)), `%s`' % pprint.pformat(dir(pm_rec)) )
         exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(pm_rec.__dict__), `%s`' % pprint.pformat(pm_rec.__dict__) )
         exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(pm_rec.as_dict()), `%s`' % pprint.pformat(pm_rec.as_dict()) )
-
         # exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(rec.data.holdingsData), `%s`' % pprint.pformat(rec.data.holdingsData) )
+        return
 
-
-        result_list = []
+    def build_bibrecord_holdings( self, resultset ):
+        """ Works with each result's `bibliographicRecord` data. """
+        bibrecord_resultlist = []
         for result in resultset:
             result_entry = {}
             result_entry[u'marc'] = result.data.bibliographicRecord.encoding
             pm_rec = Record( data=result.data.bibliographicRecord.encoding[1] )
-            result_entry[u'dict'] = pm_rec.as_dict()
-            result_list.append( result_entry )
-        return_data = {
-            u'resultset_length': len(resultset),
-            u'result_list': result_list
-            }
-        # exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(return_data), `%s`' % pprint.pformat(return_data) )
-
-        return
+            result_entry[u'marc_dict'] = pm_rec.as_dict()
+            exp.logger.debug( u'in play.Experimenter.build_bibrecord_holdings, pprint.pformat(result_entry), `%s`' % pprint.pformat(result_entry) )
+            bibrecord_resultlist.append( result_entry )
+        return bibrecord_resultlist
 
 
 try:
@@ -122,6 +118,7 @@ try:
     qobject = exp.build_qobject( qstring )
     resultset = exp.connection.search( qobject )
     exp.inspect_resultset( resultset )
+    bibrecord_holdings = exp.build_bibrecord_holdings( resultset )
     1/0
 
 except Exception as e:
