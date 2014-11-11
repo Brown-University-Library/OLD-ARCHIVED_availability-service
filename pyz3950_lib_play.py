@@ -97,18 +97,25 @@ class Experimenter( object ):
         # exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(rec.data.holdingsData), `%s`' % pprint.pformat(rec.data.holdingsData) )
         return
 
-    def build_bibrecord_holdings( self, resultset ):
+    def extract_marc( self, resultset ):
         """ Works with each result's `bibliographicRecord` data. """
-        bibrecord_resultlist = []
+        marc_list = []
         for result in resultset:
             result_entry = {}
             result_entry[u'marc'] = result.data.bibliographicRecord.encoding
             pm_rec = Record( data=result.data.bibliographicRecord.encoding[1] )
             result_entry[u'marc_dict'] = pm_rec.as_dict()
-            exp.logger.debug( u'in play.Experimenter.build_bibrecord_holdings, pprint.pformat(result_entry), `%s`' % pprint.pformat(result_entry) )
-            bibrecord_resultlist.append( result_entry )
-        return bibrecord_resultlist
+            exp.logger.debug( u'in play.Experimenter.extract_marc, pprint.pformat(result_entry), `%s`' % pprint.pformat(result_entry) )
+            marc_list.append( result_entry )
+        return marc_list
 
+    def build_items( self, marc_list ):
+        """ Builds initial item-list from marc. """
+        item_list = []
+        for marc_entry in marc_list:
+            item_list[u'brief_title'] = self.make_brief_title( marc_entry[u'marc_dict'] )
+        exp.logger.debug( u'in play.Experimenter.item_list, pprint.pformat(item_list), `%s`' % pprint.pformat(item_list) )
+        return item_list
 
 try:
 
@@ -118,7 +125,8 @@ try:
     qobject = exp.build_qobject( qstring )
     resultset = exp.connection.search( qobject )
     exp.inspect_resultset( resultset )
-    bibrecord_holdings = exp.build_bibrecord_holdings( resultset )
+    marc_list = exp.extract_marc( resultset )
+    initial_item_list = exp.build_items( marc_list )
     1/0
 
 except Exception as e:
