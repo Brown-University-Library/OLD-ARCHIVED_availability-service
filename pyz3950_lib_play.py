@@ -113,9 +113,115 @@ class Experimenter( object ):
         """ Builds initial item-list from marc. """
         item_list = []
         for marc_entry in marc_list:
-            item_list[u'brief_title'] = self.make_brief_title( marc_entry[u'marc_dict'] )
-        exp.logger.debug( u'in play.Experimenter.item_list, pprint.pformat(item_list), `%s`' % pprint.pformat(item_list) )
+            item_entry = {}
+            marc_dict = marc_entry[u'marc_dict']
+            item_entry[u'brief_title'] = self.make_brief_title( marc_dict )
+            item_entry[u'callnumber'] = self.make_marc_callnumber( marc_dict )
+            item_entry[u'itemid'] = self.make_marc_itemid( marc_dict )
+            item_entry[u'item_barcode'] = self.make_marc_barcode( marc_dict )
+            item_entry[u'isbn'] = self.make_isbn( marc_dict )
+            item_entry[u'lccn'] = self.make_lccn( marc_dict )
+            item_entry[u'bibid'] = self.make_bibid( marc_dict )
+            item_list.append( item_entry )
+        exp.logger.debug( u'in play.Experimenter.build_items(); pprint.pformat(item_list), `%s`' % pprint.pformat(item_list) )
         return item_list
+
+    def make_brief_title( self, marc_dict ):
+        brief_title = u'title_not_available'
+        for field in marc_dict[u'fields']:
+            ( key, val ) = field.items()[0]
+            if key == u'245':
+                for subfield in field[key][u'subfields']:
+                    ( key2, val2 ) = subfield.items()[0]
+                    if key2 == u'a':
+                        brief_title = val2
+                        break
+        exp.logger.debug( u'in play.Experimenter.make_brief_title(); brief_title, `%s`' % brief_title )
+        return brief_title
+
+    def make_marc_callnumber( self, marc_dict ):
+        callnumber = []
+        for field in marc_dict[u'fields']:
+            ( key, val ) = field.items()[0]
+            if key == u'090':
+                for subfield in field[key][u'subfields']:
+                    ( key2, val2 ) = subfield.items()[0]
+                    callnumber.append( val2 )
+        exp.logger.debug( u'in play.Experimenter.make_marc_callnumber(); callnumber, `%s`' % callnumber )
+        return callnumber
+
+    def make_marc_itemid( self, marc_dict ):
+        itemid = u'itemid_not_availale'
+        for field in marc_dict[u'fields']:
+            ( key, val ) = field.items()[0]
+            if key == u'945':
+                for subfield in field[key][u'subfields']:
+                    ( key2, val2 ) = subfield.items()[0]
+                    if key2 == u'y':
+                        itemid = val2
+                        break
+        exp.logger.debug( u'in play.Experimenter.make_marc_itemid(); itemid, `%s`' % itemid )
+        return itemid
+
+    def make_marc_barcode( self, marc_dict ):
+        barcode = u'barcode_not_availale'
+        for field in marc_dict[u'fields']:
+            ( key, val ) = field.items()[0]
+            if key == u'945':
+                for subfield in field[key][u'subfields']:
+                    ( key2, val2 ) = subfield.items()[0]
+                    if key2 == u'i':
+                        barcode = val2.replace( u' ', u'' )
+                        break
+        exp.logger.debug( u'in play.Experimenter.make_marc_barcode(); barcode, `%s`' % barcode )
+        return barcode
+
+    def make_isbn( self, marc_dict ):
+        isbn = u'isbn_not_availale'
+        for field in marc_dict[u'fields']:
+            ( key, val ) = field.items()[0]
+            if key == u'020':
+                for subfield in field[key][u'subfields']:
+                    ( key2, val2 ) = subfield.items()[0]
+                    if key2 == u'a':
+                        isbn = val2
+                        break
+        exp.logger.debug( u'in play.Experimenter.make_isbn(); isbn, `%s`' % isbn )
+        return isbn
+
+    def make_lccn( self, marc_dict ):
+        lccn = u'lccn_not_availale'
+        for field in marc_dict[u'fields']:
+            ( key, val ) = field.items()[0]
+            if key == u'010':
+                for subfield in field[key][u'subfields']:
+                    ( key2, val2 ) = subfield.items()[0]
+                    if key2 == u'a':
+                        lccn = val2
+                        break
+        exp.logger.debug( u'in play.Experimenter.make_lccn(); lccn, `%s`' % lccn )
+        return lccn
+
+    def make_bibid( self, marc_dict ):
+        bibid = u'bibid_not_availale'
+        for field in marc_dict[u'fields']:
+            ( key, val ) = field.items()[0]
+            if key == u'907':
+                for subfield in field[key][u'subfields']:
+                    ( key2, val2 ) = subfield.items()[0]
+                    if key2 == u'a':
+                        bibid = val2
+                        break
+        exp.logger.debug( u'in play.Experimenter.make_bibid(); bibid, `%s`' % bibid )
+        return bibid
+
+
+
+
+
+
+
+
 
 try:
 
