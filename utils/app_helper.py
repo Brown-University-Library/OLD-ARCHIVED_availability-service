@@ -5,7 +5,8 @@ Helper for availability_service.availability_app
 """
 
 import datetime, os
-from availability_service.utils import backend
+# from availability_service.utils import backend
+from availability_service.utils import z3950_wrapper
 from werkzeug.contrib.cache import FileSystemCache
 
 
@@ -49,23 +50,36 @@ class HandlerHelper( object ):
         cache_key = u'%s_%s' % ( key, value )
         response_dict = cache.get( cache_key )
         if response_dict is None:
-            response_dict = self.query_josiah( key, value.encode(u'utf-8') )
+            response_dict = self.query_josiah( key, value )
+            # response_dict = self.query_josiah( key, value.encode(u'utf-8') )
             cache.set( cache_key, response_dict )
         return response_dict
 
-    def query_josiah( self, key, utf8_value ):
+    def query_josiah( self, key, value ):
         """ Perform actual query.
             Called by self.build_response_dict(). """
-        z39 = backend.Search( self.log )
-        if key == u'bib':
-            rsp_list = z39.id( utf8_value )
-        elif key == u'isbn':
-            rsp_list = z39.isbn( utf8_value )
-        elif key == u'issn':
-            rsp_list = z39.issn( utf8_value )
-        elif key == u'oclc':
-            rsp_list = z39.oclc( utf8_value )
-        z39.close()
-        return { u'backend_response': unicode(repr(rsp_list)), u'response_timestamp': unicode(datetime.datetime.now()) }
+        srchr = z3950_wrapper.Searcher( self.log )
+        srchr.connect()
+        item_list = srchr.search( key, value, marc_flag=False )
+        srchr.close_connection()
+        return {
+            u'backend_response': item_list,
+            u'response_timestamp': unicode(datetime.datetime.now()) }
+
+    # def query_josiah( self, key, utf8_value ):
+    #     """ Perform actual query.
+    #         Called by self.build_response_dict(). """
+    #     from availability_service.utils import backend
+    #     z39 = backend.Search( self.log )
+    #     if key == u'bib':
+    #         rsp_list = z39.id( utf8_value )
+    #     elif key == u'isbn':
+    #         rsp_list = z39.isbn( utf8_value )
+    #     elif key == u'issn':
+    #         rsp_list = z39.issn( utf8_value )
+    #     elif key == u'oclc':
+    #         rsp_list = z39.oclc( utf8_value )
+    #     z39.close()
+    #     return { u'backend_response': unicode(repr(rsp_list)), u'response_timestamp': unicode(datetime.datetime.now()) }
 
     # end class HandlerHelper
