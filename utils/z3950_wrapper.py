@@ -42,7 +42,7 @@ class Searcher( object ):
             qstring = self.build_qstring( key, value )
             qobject = self.build_qobject( qstring )
             resultset = self.connection.search( qobject )
-            self.inspect_resultset( resultset )
+            # self.inspect_resultset( resultset )
             item_list = self.process_resultset( resultset, marc_flag )  # marc_flag typically False
             return item_list
         except Exception as e:
