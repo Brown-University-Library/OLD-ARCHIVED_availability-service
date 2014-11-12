@@ -133,6 +133,7 @@ class Searcher( object ):
         item_entry[u'item_barcode'] = self.make_marc_barcode( marc_dict )
         item_entry[u'isbn'] = marc_record_object.isbn()
         item_entry[u'lccn'] = self.make_lccn( marc_dict )
+        item_entry[u'location'] = self.make_location( marc_dict )
         item_entry[u'bibid'] = self.make_bibid( marc_dict )
         item_entry[u'josiah_bib_url'] = u'%s/record=%s' % ( u'https://josiah.brown.edu', item_entry[u'bibid'][1:-1] )  # removes period & check-digit
         item_entry[u'oclc_brown'] = self.make_oclc_brown( marc_dict )
@@ -189,6 +190,19 @@ class Searcher( object ):
                         break
         self.logger.debug( u'in z3950_wrapper.Searcher.make_lccn(); lccn, `%s`' % lccn )
         return lccn
+
+    def make_location( self, marc_dict ):
+        location = u'location_not_available'
+        for field in marc_dict[u'fields']:
+            ( key, val ) = field.items()[0]
+            if key == u'945':
+                for subfield in field[key][u'subfields']:
+                    ( key2, val2 ) = subfield.items()[0]
+                    if key2 == u'l':
+                        location = val2
+                        break
+        self.logger.debug( u'in z3950_wrapper.Searcher.make_location(); location, `%s`' % location )
+        return location.strip()
 
     def make_bibid( self, marc_dict ):
         bibid = u'bibid_not_available'
