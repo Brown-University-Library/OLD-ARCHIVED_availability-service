@@ -28,12 +28,14 @@ def hello_world():
 def handler( key, value ):
     log.debug( u'in availability_app.handler(); starting' )
     helper = app_helper.HandlerHelper( log )
-    query = helper.build_query_dict( flask.request.url, key, value )
+    query = helper.build_query_dict(
+        flask.request.url, key, value, flask.request.args.get(u'show_marc', u'') )
     validation = helper.validate( key, value )
     if not validation == u'good':
         return_dict = { u'query': query, u'response': {u'error': validation} }
         return flask.jsonify( return_dict )
-    response = helper.build_response_dict( key, value )
+    response = helper.build_response_dict(
+        key, value, flask.request.args.get(u'show_marc', u'') )
     return flask.jsonify( {u'query': query, u'response': response} )
 
 
