@@ -33,8 +33,10 @@ class SearcherTest( unittest.TestCase ):
         self.book_bib = u'b3386235'
         self.journal_bib = u'b4074295'
         self.online_journal_bib = u'b7091233'
-        self.oclc_num = u'ocm41356566'
+        self.oclc_brown_num = u'ocm41356566'
+        self.oclc_worldcat_num = u'673595'
         self.isbn = u'0688002307'
+        self.issn = u'00376779'
 
     def tearDown(self):
         self.srchr.close_connection()
@@ -51,7 +53,7 @@ class SearcherTest( unittest.TestCase ):
         ## list of dicts
         self.assertEqual( dict, type(item_list[0]) )
         ## data
-        expected = [u'bibid', u'callnumber', u'holdings_data', u'isbn', u'item_barcode', u'itemid', u'josiah_bib_url', u'lccn', u'location', u'oclc_brown', u'raw_marc', u'title']
+        expected = [u'bibid', u'callnumber', u'holdings_data', u'isbn', u'issn', u'item_barcode', u'itemid', u'josiah_bib_url', u'lccn', u'location', u'oclc_brown', u'raw_marc', u'title']
         self.assertEqual( expected, sorted(item_list[0].keys()) )
         ## id reflected back
         expected = self.isbn
@@ -67,7 +69,7 @@ class SearcherTest( unittest.TestCase ):
         ## list of dicts
         self.assertEqual( dict, type(item_list[0]) )
         ## data
-        expected = [u'bibid', u'callnumber', u'holdings_data', u'isbn', u'item_barcode', u'itemid', u'josiah_bib_url', u'lccn', u'location', u'oclc_brown', u'title']
+        expected = [u'bibid', u'callnumber', u'holdings_data', u'isbn', u'issn', u'item_barcode', u'itemid', u'josiah_bib_url', u'lccn', u'location', u'oclc_brown', u'title']
         self.assertEqual( expected, sorted(item_list[0].keys()) )
         ## id reflected back
         expected = self.isbn
@@ -78,20 +80,46 @@ class SearcherTest( unittest.TestCase ):
     def test_journal_bib(self):
         """ Tests returned journal data. """
         item_list = self.srchr.search( key=u'bib', value=self.journal_bib, marc_flag=False )
-        expected = [u'bibid', u'callnumber', u'holdings_data', u'isbn', u'item_barcode', u'itemid', u'josiah_bib_url', u'lccn', u'location', u'oclc_brown', u'title']
+        expected = [u'bibid', u'callnumber', u'holdings_data', u'isbn', u'issn', u'item_barcode', u'itemid', u'josiah_bib_url', u'lccn', u'location', u'oclc_brown', u'title']
         self.assertEqual( expected, sorted(item_list[0].keys()) )
+
+    def test_journal_issn(self):
+        """ Tests returned journal data. """
+        item_list = self.srchr.search( key=u'issn', value=self.issn, marc_flag=False )
+        expected = [u'bibid', u'callnumber', u'holdings_data', u'isbn', u'issn', u'item_barcode', u'itemid', u'josiah_bib_url', u'lccn', u'location', u'oclc_brown', u'title']
+        self.assertEqual( expected, sorted(item_list[0].keys()) )
+        expected = u'0037-6779'
+        self.assertEqual( expected, item_list[0][u'issn'] )
 
     def test_online_journal_bib(self):
         """ Tests returned online-journal data. """
         item_list = self.srchr.search( key=u'bib', value=self.online_journal_bib, marc_flag=False )
-        expected = [u'bibid', u'callnumber', u'holdings_data', u'isbn', u'item_barcode', u'itemid', u'josiah_bib_url', u'lccn', u'location', u'oclc_brown', u'title']
+        expected = [u'bibid', u'callnumber', u'holdings_data', u'isbn', u'issn', u'item_barcode', u'itemid', u'josiah_bib_url', u'lccn', u'location', u'oclc_brown', u'title']
         self.assertEqual( expected, sorted(item_list[0].keys()) )
 
-    def test_book_oclc(self):
-        """ Tests returned online-journal data. """
-        item_list = self.srchr.search( key=u'oclc', value=self.oclc_num, marc_flag=False )
-        expected = [u'bibid', u'callnumber', u'holdings_data', u'isbn', u'item_barcode', u'itemid', u'josiah_bib_url', u'lccn', u'location', u'oclc_brown', u'title']
+    def test_book_oclc_worldcat(self):
+        """ Tests returned book data. """
+        item_list = self.srchr.search( key=u'oclc', value=self.oclc_worldcat_num, marc_flag=False )
+        expected = [u'bibid', u'callnumber', u'holdings_data', u'isbn', u'issn', u'item_barcode', u'itemid', u'josiah_bib_url', u'lccn', u'location', u'oclc_brown', u'title']
         self.assertEqual( expected, sorted(item_list[0].keys()) )
+
+    def test_book_oclc_brown(self):
+        """ Tests returned book data. """
+        item_list = self.srchr.search( key=u'oclc', value=self.oclc_brown_num, marc_flag=False )
+        expected = [u'bibid', u'callnumber', u'holdings_data', u'isbn', u'issn', u'item_barcode', u'itemid', u'josiah_bib_url', u'lccn', u'location', u'oclc_brown', u'title']
+        self.assertEqual( expected, sorted(item_list[0].keys()) )
+
+    def test_update_oclc_value(self):
+        test_list = [
+            ## ocm
+            ( u'01779188', u'ocm01779188' ),
+            ( u'20938693', u'ocm20938693' ),
+            ( u'ocm40908632', u'ocm40908632' ),
+            ## ocn
+            ( u'647071718', u'ocn647071718' ),
+            ( u'ocn647071718', u'ocn647071718' ) ]
+        for start, expected in test_list:
+            self.assertEquals( expected, self.srchr.update_oclc_value(start) )
 
 
 

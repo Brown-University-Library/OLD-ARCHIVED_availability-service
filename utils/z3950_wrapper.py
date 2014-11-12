@@ -42,6 +42,7 @@ class Searcher( object ):
             qstring = self.build_qstring( key, value )
             qobject = self.build_qobject( qstring )
             resultset = self.connection.search( qobject )
+            self.inspect_resultset( resultset )
             item_list = self.process_resultset( resultset, marc_flag )  # marc_flag typically False
             return item_list
         except Exception as e:
@@ -57,9 +58,25 @@ class Searcher( object ):
             u'issn': u'@attr 1=8',
             u'id': u'@attr 1=12',
             u'oclc': u'@attr 1=1007', }
+        value = value   if key != u'oclc'   else self.update_oclc_value( value )
         qstring = u'%s %s' % ( dct[key], value )
         self.logger.debug( 'in z3950_wrapper.Searcher.build_qstring(); qstring, `%s`' % qstring )
         return qstring
+
+    def update_oclc_value( self, value ):
+        """ Updates oclc number to brown-formatted number if necessary.
+            Reference: http://www.oclc.org/batchprocessing/controlnumber.htm """
+        if not ( value.startswith(u'ocn') or value.startswith(u'ocm') ):
+            try:
+                int_value = int(value)
+                new_value = unicode(int_value).zfill( 8 )
+                if int_value <= 99999999:
+                    value = u'ocm%s' % new_value
+                else:
+                    value = u'ocn%s' % new_value
+            except Exception, e:
+                value = u'invalid_oclc_number'
+        return value
 
     def build_qobject( self, qstring ):
         qobject = zoom.Query(
@@ -135,6 +152,7 @@ class Searcher( object ):
         item_entry[u'lccn'] = self.make_lccn( marc_dict )
         item_entry[u'location'] = self.make_location( marc_dict )
         item_entry[u'bibid'] = self.make_bibid( marc_dict )
+        item_entry[u'issn'] = self.make_issn( marc_dict )
         item_entry[u'josiah_bib_url'] = u'%s/record=%s' % ( u'https://josiah.brown.edu', item_entry[u'bibid'][1:-1] )  # removes period & check-digit
         item_entry[u'oclc_brown'] = self.make_oclc_brown( marc_dict )
         self.logger.debug( u'in z3950_wrapper.Searcher.process_marc_data(); pprint.pformat(item_entry), `%s`' % pprint.pformat(item_entry) )
@@ -216,6 +234,19 @@ class Searcher( object ):
                         break
         self.logger.debug( u'in z3950_wrapper.Searcher.make_bibid(); bibid, `%s`' % bibid )
         return bibid
+
+    def make_issn( self, marc_dict, issn=u'issn_not_available' ):
+        for field in marc_dict[u'fields']:
+            ( key, val ) = field.items()[0]
+            if key == u'022':
+                for subfield in field[key][u'subfields']:
+                    ( key2, val2 ) = subfield.items()[0]
+                    if key2 == u'a':
+                        issn = val2
+                    elif key2 == u'l' and issn == u'issn_not_available':
+                        issn = val2
+        self.logger.debug( u'in z3950_wrapper.Searcher.make_bibid(); bibid, `%s`' % issn )
+        return issn
 
     def make_oclc_brown( self, marc_dict ):
         oclc = u'oclc_not_available'
