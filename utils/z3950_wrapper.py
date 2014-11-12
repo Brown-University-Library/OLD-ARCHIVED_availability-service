@@ -33,24 +33,32 @@ class Searcher( object ):
         return
 
     def close_connection( self ):
-        self.logger.debug( 'z3950_wrapper.Searcher.close_connection(); closing connection.')
+        self.logger.debug( 'in z3950_wrapper.Searcher.close_connection(); closing connection.')
         self.connection.close()
 
-    def make_error_dict( self ):
-        error_dict = {
-            u'error-type': sys.exc_info()[0],
-            u'error-message': sys.exc_info()[1],
-            u'line-number': sys.exc_info()[2].tb_lineno
-            }
-        return error_dict
+    def search( self, key, value, marc_flag=False ):
+        """ Convenience function. """
+        try:
+            qstring = self.build_qstring( key, value )
+            qobject = self.build_qobject( qstring )
+            resultset = self.connection.search( qobject )
+            item_list = self.process_resultset( resultset, marc_flag )  # marc_flag typically False
+            return item_list
+        except Exception as e:
+            self.close_connection()
+            error_dict = self.make_error_dict()
+            self.logger.error( u'in z3950_wrapper.Searcher.search(); error-info, `%s`' % pprint.pformat(error_dict) )
 
     def build_qstring( self, key, value ):
+        if key == u'bib':
+            key = u'id'
         dct = {
             u'isbn': u'@attr 1=7',
             u'issn': u'@attr 1=8',
-        }
+            u'id': u'@attr 1=12',
+            u'oclc': u'@attr 1=1007', }
         qstring = u'%s %s' % ( dct[key], value )
-        self.logger.debug( 'z3950_wrapper.Searcher.build_qstring(); qstring, `%s`' % qstring )
+        self.logger.debug( 'in z3950_wrapper.Searcher.build_qstring(); qstring, `%s`' % qstring )
         return qstring
 
     def build_qobject( self, qstring ):
@@ -218,41 +226,12 @@ class Searcher( object ):
         self.logger.debug( u'in z3950_wrapper.Searcher.make_oclc_brown(); oclc, `%s`' % oclc )
         return oclc
 
-    # end class Experimenter()
+    def make_error_dict( self ):
+        error_dict = {
+            u'error-type': sys.exc_info()[0],
+            u'error-message': sys.exc_info()[1],
+            u'line-number': sys.exc_info()[2].tb_lineno
+            }
+        return error_dict
 
-
-def setup_logger():
-    """ Returns a logger to write to a file.
-        Assumes os handles log-rotate. """
-    LOG_DIR = unicode( os.environ.get(u'availability__LOG_DIR') )
-    LOG_LEVEL = unicode( os.environ.get(u'availability__LOG_LEVEL') )
-    filename = u'%s/availability_service.log' % LOG_DIR
-    formatter = logging.Formatter( u'[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s' )
-    logger = logging.getLogger( __name__ )
-    level_dict = { u'debug': logging.DEBUG, u'info':logging.INFO }
-    logger.setLevel( level_dict[LOG_LEVEL] )
-    file_handler = logging.FileHandler( filename )
-    file_handler.setFormatter( formatter )
-    logger.addHandler( file_handler )
-    return logger
-
-
-try:
-    logger = setup_logger()
-    srchr = Searcher( logger )
-    srchr.connect()
-    qstring = srchr.build_qstring( u'isbn', u'0688002307' )
-    qobject = srchr.build_qobject( qstring )
-    resultset = srchr.connection.search( qobject )
-    srchr.inspect_resultset( resultset )
-    item_list = srchr.process_resultset( resultset, marc_flag=False )
-    pprint.pprint( item_list )
-
-except Exception as e:
-
-    if srchr.connection:
-        srchr.logger.debug( u'in z3950_wrapper except; error; will close connection' )
-        srchr.close_connection()
-    error_dict = srchr.make_error_dict()
-    pprint.pprint( error_dict )
-    logger.debug( u'in z3950_wrapper except; error-info, `%s`' % pprint.pformat(error_dict) )
+    # end class Searcher()
