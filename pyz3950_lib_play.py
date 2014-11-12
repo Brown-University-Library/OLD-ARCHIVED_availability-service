@@ -14,27 +14,12 @@ from pymarc import Record  # pymarc==3.0.2
 
 class Experimenter( object ):
 
-    def __init__( self ):
+    def __init__( self, logger ):
         self.HOST = unicode( os.getenv(u'availability_HOST') )
         self.PORT = unicode( os.getenv(u'availability_PORT') )
         self.DB_NAME = unicode( os.getenv(u'availability_DB_NAME') )
-        self.LOG_DIR = unicode( os.environ.get(u'availability__LOG_DIR') )
-        self.LOG_LEVEL = unicode( os.environ.get(u'availability__LOG_LEVEL') )
-        self.logger = self.setup_logger()
+        self.logger = logger
         self.connection = None
-
-    def setup_logger( self ):
-        """ Returns a logger to write to a file.
-            Assumes os handles log-rotate. """
-        filename = u'%s/availability_service.log' % self.LOG_DIR
-        formatter = logging.Formatter( u'[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s' )
-        logger = logging.getLogger( __name__ )
-        level_dict = { u'debug': logging.DEBUG, u'info':logging.INFO }
-        logger.setLevel( level_dict[self.LOG_LEVEL] )
-        file_handler = logging.FileHandler( filename )
-        file_handler.setFormatter( formatter )
-        logger.addHandler( file_handler )
-        return logger
 
     def connect( self ):
         conn = zoom.Connection(
@@ -236,9 +221,26 @@ class Experimenter( object ):
     # end class Experimenter()
 
 
+def setup_logger():
+    """ Returns a logger to write to a file.
+        Assumes os handles log-rotate. """
+    LOG_DIR = unicode( os.environ.get(u'availability__LOG_DIR') )
+    LOG_LEVEL = unicode( os.environ.get(u'availability__LOG_LEVEL') )
+    filename = u'%s/availability_service.log' % LOG_DIR
+    formatter = logging.Formatter( u'[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s' )
+    logger = logging.getLogger( __name__ )
+    level_dict = { u'debug': logging.DEBUG, u'info':logging.INFO }
+    logger.setLevel( level_dict[LOG_LEVEL] )
+    file_handler = logging.FileHandler( filename )
+    file_handler.setFormatter( formatter )
+    logger.addHandler( file_handler )
+    return logger
+
+
 try:
 
-    exp = Experimenter()
+    logger = setup_logger()
+    exp = Experimenter( logger )
     exp.connect()
     qstring = exp.build_qstring( u'isbn', u'0688002307' )
     qobject = exp.build_qobject( qstring )
