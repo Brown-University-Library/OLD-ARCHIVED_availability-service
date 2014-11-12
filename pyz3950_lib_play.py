@@ -103,13 +103,13 @@ class Experimenter( object ):
         exp.logger.debug( u'in play.Experimenter.inspect_resultset, pprint.pformat(rec.data.holdingsData[0][1].callNumber, `%s`' % pprint.pformat(rec.data.holdingsData[0][1].callNumber) )
         return
 
-    def process_resultset( self, resultset, raw_marc=False ):
+    def process_resultset( self, resultset, marc_flag=False ):
         """ Iterates through resultset, extracting from marc-data and holdings-data. """
         item_list = []
         for result in resultset:
             ## start w/marc
             marc_record_object = Record( data=result.data.bibliographicRecord.encoding[1] )
-            item_entry = self.process_marc_data( marc_record_object )
+            item_entry = self.process_marc_data( marc_record_object, marc_flag )
             ## add holdings
             holdings_record_data = result.data.holdingsData
             item_entry[u'holdings_data'] = self.process_holdings_data( holdings_record_data )
@@ -129,10 +129,10 @@ class Experimenter( object ):
         exp.logger.debug( u'in play.Experimenter.process_holdings_data, pprint.pformat(record_holdings_data), `%s`' % pprint.pformat(record_holdings_data) )
         return record_holdings_data
 
-    def process_marc_data( self, marc_record_object, raw_marc=False ):
+    def process_marc_data( self, marc_record_object, marc_flag ):
         marc_dict = marc_record_object.as_dict()
         item_entry = {}
-        if raw_marc:
+        if marc_flag:
             item_entry[u'raw_marc'] = marc_dict
         item_entry[u'title'] = marc_record_object.title()
         item_entry[u'callnumber'] = self.make_marc_callnumber( marc_dict )
@@ -244,7 +244,7 @@ try:
     qobject = exp.build_qobject( qstring )
     resultset = exp.connection.search( qobject )
     exp.inspect_resultset( resultset )
-    item_list = exp.process_resultset( resultset )
+    item_list = exp.process_resultset( resultset, marc_flag=False )
     pprint.pprint( item_list )
 
 except Exception as e:
