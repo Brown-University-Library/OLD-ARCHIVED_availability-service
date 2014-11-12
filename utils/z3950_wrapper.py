@@ -139,19 +139,6 @@ class Searcher( object ):
         self.logger.debug( u'in z3950_wrapper.Searcher.process_marc_data(); pprint.pformat(item_entry), `%s`' % pprint.pformat(item_entry) )
         return item_entry
 
-    def make_brief_title( self, marc_dict ):
-        brief_title = u'title_not_available'
-        for field in marc_dict[u'fields']:
-            ( key, val ) = field.items()[0]
-            if key == u'245':
-                for subfield in field[key][u'subfields']:
-                    ( key2, val2 ) = subfield.items()[0]
-                    if key2 == u'a':
-                        brief_title = val2
-                        break
-        self.logger.debug( u'in z3950_wrapper.Searcher.make_brief_title(); brief_title, `%s`' % brief_title )
-        return brief_title
-
     def make_marc_callnumber( self, marc_dict ):
         ( callnumber, subfield_callnumber ) = ( u'callnumber_not_available', u'' )
         for field in marc_dict[u'fields']:
