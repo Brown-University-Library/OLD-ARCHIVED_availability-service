@@ -14,12 +14,12 @@ from pymarc import Record  # pymarc==3.0.2
 
 class Searcher( object ):
 
-    def __init__( self, HOST, PORT, DB_NAME, logger, connection=False ):
+    def __init__( self, HOST, PORT, DB_NAME, logger, connect_flag=False ):
         self.HOST = HOST   if type(HOST) == unicode   else HOST.decode(u'utf-8')
         self.PORT = PORT   if type(PORT) == unicode   else PORT.decode(u'utf-8')
         self.DB_NAME = DB_NAME   if type(DB_NAME) == unicode   else DB_NAME.decode(u'utf-8')
         self.logger = logger
-        self.connection = self.connect()   if connection   else None  # allows Searcher to be instantiated w/o connecting
+        self.connection = self.connect()   if connect_flag   else None  # allows Searcher to be instantiated w/o connecting
 
     def connect( self ):
         """ Connects to z3950 server. """

@@ -63,7 +63,7 @@ class HandlerHelper( object ):
             Called by self.build_response_dict(). """
         marc_flag = True if show_marc_param == u'true' else False
         srchr = z3950_wrapper.Searcher(
-            HOST=self.HOST, PORT=self.PORT, DB_NAME=self.DB_NAME, logger=self.log, connection=True
+            HOST=self.HOST, PORT=self.PORT, DB_NAME=self.DB_NAME, logger=self.log, connect_flag=True
             )
         item_list = srchr.search( key, value, marc_flag )
         srchr.close_connection()

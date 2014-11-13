@@ -33,7 +33,7 @@ class SearcherTest( unittest.TestCase ):
             PORT=unicode( os.getenv(u'availability_PORT') ),
             DB_NAME=unicode( os.getenv(u'availability_DB_NAME') ),
             logger=setup_logger(),
-            connection=True )
+            connect_flag=True )
         # self.srchr.connect()
         self.book_bib = u'b3386235'
         self.journal_bib = u'b4074295'
