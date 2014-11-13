@@ -28,8 +28,13 @@ class SearcherTest( unittest.TestCase ):
     """ Tests z3950_wrapper.Searcher() wrapper around Brown's fork of PyZ3950. """
 
     def setUp(self):
-        self.srchr = Searcher( setup_logger() )
-        self.srchr.connect()
+        self.srchr = Searcher(
+            HOST=unicode( os.getenv(u'availability_HOST') ),
+            PORT=unicode( os.getenv(u'availability_PORT') ),
+            DB_NAME=unicode( os.getenv(u'availability_DB_NAME') ),
+            logger=setup_logger(),
+            connection=True )
+        # self.srchr.connect()
         self.book_bib = u'b3386235'
         self.journal_bib = u'b4074295'
         self.online_journal_bib = u'b7091233'

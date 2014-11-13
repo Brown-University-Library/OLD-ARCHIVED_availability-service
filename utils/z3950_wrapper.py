@@ -14,26 +14,26 @@ from pymarc import Record  # pymarc==3.0.2
 
 class Searcher( object ):
 
-    def __init__( self, logger ):
-        self.HOST = unicode( os.getenv(u'availability_HOST') )
-        self.PORT = unicode( os.getenv(u'availability_PORT') )
-        self.DB_NAME = unicode( os.getenv(u'availability_DB_NAME') )
+    def __init__( self, HOST, PORT, DB_NAME, logger, connection=False ):
+        self.HOST = HOST   if type(HOST) == unicode   else HOST.decode(u'utf-8')
+        self.PORT = PORT   if type(PORT) == unicode   else PORT.decode(u'utf-8')
+        self.DB_NAME = DB_NAME   if type(DB_NAME) == unicode   else DB_NAME.decode(u'utf-8')
         self.logger = logger
-        self.connection = None
+        self.connection = self.connect()   if connection   else None  # allows Searcher to be instantiated w/o connecting
 
     def connect( self ):
+        """ Connects to z3950 server. """
         conn = zoom.Connection(
             self.HOST,
             int(self.PORT),
             databaseName=self.DB_NAME,
             preferredRecordSyntax=u'OPAC',  # Getting records in "opac" format. (Others were not more helpful.)
-            charset=u'utf-8',
-            )
-        self.connection = conn
-        return
+            charset=u'utf-8' )
+        self.logger.debug( u'in z3950_wrapper.Searcher.connect(); connection made.')
+        return conn
 
     def close_connection( self ):
-        self.logger.debug( 'in z3950_wrapper.Searcher.close_connection(); closing connection.')
+        self.logger.debug( u'in z3950_wrapper.Searcher.close_connection(); closing connection.')
         self.connection.close()
 
     def search( self, key, value, marc_flag=False ):
@@ -60,7 +60,7 @@ class Searcher( object ):
             u'oclc': u'@attr 1=1007', }
         value = value   if key != u'oclc'   else self.update_oclc_value( value )
         qstring = u'%s %s' % ( dct[key], value )
-        self.logger.debug( 'in z3950_wrapper.Searcher.build_qstring(); qstring, `%s`' % qstring )
+        self.logger.debug( u'in z3950_wrapper.Searcher.build_qstring(); qstring, `%s`' % qstring )
         return qstring
 
     def update_oclc_value( self, value ):
