@@ -14,26 +14,26 @@ from pymarc import Record  # pymarc==3.0.2
 
 class Searcher( object ):
 
-    def __init__( self, logger ):
-        self.HOST = unicode( os.getenv(u'availability_HOST') )
-        self.PORT = unicode( os.getenv(u'availability_PORT') )
-        self.DB_NAME = unicode( os.getenv(u'availability_DB_NAME') )
+    def __init__( self, HOST, PORT, DB_NAME, logger, connect_flag=False ):
+        self.HOST = HOST   if type(HOST) == unicode   else HOST.decode(u'utf-8')
+        self.PORT = PORT   if type(PORT) == unicode   else PORT.decode(u'utf-8')
+        self.DB_NAME = DB_NAME   if type(DB_NAME) == unicode   else DB_NAME.decode(u'utf-8')
         self.logger = logger
-        self.connection = None
+        self.connection = self.connect()   if connect_flag   else None  # allows Searcher to be instantiated w/o connecting
 
     def connect( self ):
+        """ Connects to z3950 server. """
         conn = zoom.Connection(
             self.HOST,
             int(self.PORT),
             databaseName=self.DB_NAME,
             preferredRecordSyntax=u'OPAC',  # Getting records in "opac" format. (Others were not more helpful.)
-            charset=u'utf-8',
-            )
-        self.connection = conn
-        return
+            charset=u'utf-8' )
+        self.logger.debug( u'in z3950_wrapper.Searcher.connect(); connection made.')
+        return conn
 
     def close_connection( self ):
-        self.logger.debug( 'in z3950_wrapper.Searcher.close_connection(); closing connection.')
+        self.logger.debug( u'in z3950_wrapper.Searcher.close_connection(); closing connection.')
         self.connection.close()
 
     def search( self, key, value, marc_flag=False ):
@@ -42,7 +42,7 @@ class Searcher( object ):
             qstring = self.build_qstring( key, value )
             qobject = self.build_qobject( qstring )
             resultset = self.connection.search( qobject )
-            self.inspect_resultset( resultset )
+            # self.inspect_resultset( resultset )
             item_list = self.process_resultset( resultset, marc_flag )  # marc_flag typically False
             return item_list
         except Exception as e:
@@ -60,7 +60,7 @@ class Searcher( object ):
             u'oclc': u'@attr 1=1007', }
         value = value   if key != u'oclc'   else self.update_oclc_value( value )
         qstring = u'%s %s' % ( dct[key], value )
-        self.logger.debug( 'in z3950_wrapper.Searcher.build_qstring(); qstring, `%s`' % qstring )
+        self.logger.debug( u'in z3950_wrapper.Searcher.build_qstring(); qstring, `%s`' % qstring )
         return qstring
 
     def update_oclc_value( self, value ):
@@ -146,11 +146,9 @@ class Searcher( object ):
             item_entry[u'raw_marc'] = marc_dict
         item_entry[u'title'] = marc_record_object.title()
         item_entry[u'callnumber'] = self.make_marc_callnumber( marc_dict )
-        item_entry[u'itemid'] = self.make_marc_itemid( marc_dict )
-        item_entry[u'item_barcode'] = self.make_marc_barcode( marc_dict )
+        item_entry[u'items_data'] = self.make_items_data( marc_record_object )
         item_entry[u'isbn'] = marc_record_object.isbn()
         item_entry[u'lccn'] = self.make_lccn( marc_dict )
-        item_entry[u'location'] = self.make_location( marc_dict )
         item_entry[u'bibid'] = self.make_bibid( marc_dict )
         item_entry[u'issn'] = self.make_issn( marc_dict )
         item_entry[u'josiah_bib_url'] = u'%s/record=%s' % ( u'https://josiah.brown.edu', item_entry[u'bibid'][1:-1] )  # removes period & check-digit
@@ -171,30 +169,23 @@ class Searcher( object ):
         self.logger.debug( u'in z3950_wrapper.Searcher.make_marc_callnumber(); callnumber, `%s`' % callnumber )
         return callnumber
 
-    def make_marc_itemid( self, marc_dict ):
-        itemid = u'itemid_not_available'
-        for field in marc_dict[u'fields']:
-            ( key, val ) = field.items()[0]
-            if key == u'945':
-                for subfield in field[key][u'subfields']:
-                    ( key2, val2 ) = subfield.items()[0]
-                    if key2 == u'y':
-                        itemid = val2
-                        break
-        self.logger.debug( u'in z3950_wrapper.Searcher.make_marc_itemid(); itemid, `%s`' % itemid )
-        return itemid
-
-    def make_marc_barcode( self, marc_dict ):
-        barcode = []
-        for field in marc_dict[u'fields']:
-            ( key, val ) = field.items()[0]
-            if key == u'945':
-                for subfield in field[key][u'subfields']:
-                    ( key2, val2 ) = subfield.items()[0]
-                    if key2 == u'i':
-                        barcode.append( val2.replace(u' ', u'') )
-        self.logger.debug( u'in z3950_wrapper.Searcher.make_marc_barcode(); barcode, `%s`' % barcode )
-        return barcode
+    def make_items_data( self, record ):
+        """ Processes each item's 945 field for:
+            - barcode,
+            - item_id,
+            - location, and
+            - callnumber. """
+        ( items, return_items_data ) = ( record.get_fields(u'945') or [], [] )
+        for item in items:
+            barcode = item[u'i']
+            if barcode is not None:
+                barcode = barcode.replace(u' ', u'')
+            item_id = item[u'y'].lstrip(u'.')
+            location = item[u'l'].strip()
+            callnumber = item[u'c']  #This seems to be the second half of the callnumber only.
+            return_items_data.append( dict(barcode=barcode, item_id=item_id, location=location, callnumber=callnumber) )
+        self.logger.debug( u'in z3950_wrapper.Searcher.make_items_data(); return_items_data, `%s`' % return_items_data )
+        return return_items_data
 
     def make_lccn( self, marc_dict ):
         lccn = u'lccn_not_available'
@@ -208,19 +199,6 @@ class Searcher( object ):
                         break
         self.logger.debug( u'in z3950_wrapper.Searcher.make_lccn(); lccn, `%s`' % lccn )
         return lccn
-
-    def make_location( self, marc_dict ):
-        location = u'location_not_available'
-        for field in marc_dict[u'fields']:
-            ( key, val ) = field.items()[0]
-            if key == u'945':
-                for subfield in field[key][u'subfields']:
-                    ( key2, val2 ) = subfield.items()[0]
-                    if key2 == u'l':
-                        location = val2
-                        break
-        self.logger.debug( u'in z3950_wrapper.Searcher.make_location(); location, `%s`' % location )
-        return location.strip()
 
     def make_bibid( self, marc_dict ):
         bibid = u'bibid_not_available'

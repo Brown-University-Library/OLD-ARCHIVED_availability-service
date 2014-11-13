@@ -14,8 +14,11 @@ class HandlerHelper( object ):
     """ Helpers for main api route: availability_service.availability_app.handler() """
 
     def __init__( self, log ):
-        self.legit_services = [ u'bib', u'isbn', u'issn', u'oclc' ]  # will enhance; possible TODO: load from yaml config file
         self.log = log
+        self.HOST = unicode( os.getenv(u'availability_HOST') )
+        self.PORT = unicode( os.getenv(u'availability_PORT') )
+        self.DB_NAME = unicode( os.getenv(u'availability_DB_NAME') )
+        self.legit_services = [ u'bib', u'isbn', u'issn', u'oclc' ]  # will enhance; possible TODO: load from yaml config file
         self.cache_dir = os.getenv( u'availability_CACHE_DIR' )
         self.cache_minutes = int( os.getenv(u'availability_CACHE_MINUTES') ) * 60  # timeout param requires seconds
 
@@ -40,7 +43,7 @@ class HandlerHelper( object ):
             message = u'service_id bad'
         if message == u'init':
             message = u'good'
-        self.log.debug( u'in validate(); message, %s' % message )
+        self.log.debug( u'in utils.app_helper.HandlerHelper.validate(); message, %s' % message )
         return message
 
     def build_response_dict( self, key, value, show_marc_param ):
@@ -59,8 +62,9 @@ class HandlerHelper( object ):
         """ Perform actual query.
             Called by self.build_response_dict(). """
         marc_flag = True if show_marc_param == u'true' else False
-        srchr = z3950_wrapper.Searcher( self.log )
-        srchr.connect()
+        srchr = z3950_wrapper.Searcher(
+            HOST=self.HOST, PORT=self.PORT, DB_NAME=self.DB_NAME, logger=self.log, connect_flag=True
+            )
         item_list = srchr.search( key, value, marc_flag )
         srchr.close_connection()
         return {
