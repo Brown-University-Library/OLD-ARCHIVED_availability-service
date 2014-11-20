@@ -54,6 +54,7 @@ class HandlerHelper( object ):
         cache_key = u'%s_%s_%s' % ( key, value, show_marc_param )
         response_dict = cache.get( cache_key )
         if response_dict is None:
+            self.log.debug( u'in utils.app_helper.HandlerHelper.build_response_dict(); _not_ using cache.' )
             response_dict = self.query_josiah( key, value, show_marc_param )
             cache.set( cache_key, response_dict )
         return response_dict
