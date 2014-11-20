@@ -169,23 +169,45 @@ class Searcher( object ):
         self.logger.debug( u'in z3950_wrapper.Searcher.make_marc_callnumber(); callnumber, `%s`' % callnumber )
         return callnumber
 
-    def make_items_data( self, record ):
+    def make_items_data( self, marc_record_object ):
         """ Processes each item's 945 field for:
-            - barcode,
-            - item_id,
-            - location, and
-            - callnumber. """
-        ( items, return_items_data ) = ( record.get_fields(u'945') or [], [] )
+              barcode, callnumber, item_id, itype, location, & status """
+        items = marc_record_object.get_fields(u'945') or []
+        return_items_data = []
         for item in items:
-            barcode = item[u'i']
-            if barcode is not None:
-                barcode = barcode.replace(u' ', u'')
-            item_id = item[u'y'].lstrip(u'.')
-            location = item[u'l'].strip()
-            callnumber = item[u'c']  #This seems to be the second half of the callnumber only.
-            return_items_data.append( dict(barcode=barcode, item_id=item_id, location=location, callnumber=callnumber) )
+            items_dict = dict(
+                barcode=self.make_945_barcode( item  ),
+                item_id=item[u'y'].lstrip(u'.'),
+                location=item[u'l'].strip(),
+                callnumber=item[u'c'],  #This seems to be the second half of the callnumber only
+                status=item[u's'].strip(),
+                itype=item[u't'].strip()
+                )
+            return_items_data.append( self.interpret_itemsdict(items_dict, marc_record_object) )
         self.logger.debug( u'in z3950_wrapper.Searcher.make_items_data(); return_items_data, `%s`' % return_items_data )
         return return_items_data
+
+    def make_945_barcode( self, item ):
+        barcode = item[u'i']
+        if barcode is not None:
+            barcode = barcode.replace(u' ', u'')
+        return barcode
+
+    def interpret_itemsdict( self, dct, marc_record_object ):
+        dct[u'location_interpreted'] = u'coming'
+        dct[u'status_interpreted'] = u'coming'
+        dct[u'itype_interpreted'] = u'coming'
+        dct[u'callnumber_interpreted'] = self.build_full_callnumber( dct[u'callnumber'], marc_record_object.get_fields(u'090') or [] )
+        return dct
+
+    def build_full_callnumber( self, callnumber_suffix, nine_oh_obj ):
+        """ Adds interpreted full callnumber for possible need to match on holdings data. """
+        self.logger.debug( u'in z3950_wrapper.Searcher.build_full_callnumber(); callnumber_suffix, `%s`' % callnumber_suffix )
+        self.logger.debug( u'in z3950_wrapper.Searcher.build_full_callnumber(); nine_oh_obj, `%s`' % nine_oh_obj )
+        full_callnumber = u''
+        if nine_oh_obj:
+            full_callnumber = u'%s %s %s' % ( nine_oh_obj[0][u'a'], nine_oh_obj[0][u'b'], callnumber_suffix )
+        return full_callnumber
 
     def make_lccn( self, marc_dict ):
         lccn = u'lccn_not_available'
