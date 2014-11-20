@@ -146,7 +146,8 @@ class Searcher( object ):
             item_entry[u'raw_marc'] = marc_dict
         item_entry[u'title'] = marc_record_object.title()
         item_entry[u'callnumber'] = self.make_marc_callnumber( marc_dict )
-        item_entry[u'items_data'] = self.make_items_data( marc_record_object )
+        # item_entry[u'items_data'] = self.make_items_data( marc_record_object )
+        item_entry[u'items_data'] = self.make_items_data( marc_record_object.get_fields(u'945') or [] )
         item_entry[u'isbn'] = marc_record_object.isbn()
         item_entry[u'lccn'] = self.make_lccn( marc_dict )
         item_entry[u'bibid'] = self.make_bibid( marc_dict )
@@ -169,19 +170,20 @@ class Searcher( object ):
         self.logger.debug( u'in z3950_wrapper.Searcher.make_marc_callnumber(); callnumber, `%s`' % callnumber )
         return callnumber
 
-    def make_items_data( self, record ):
+    def make_items_data( self, items ):
         """ Processes each item's 945 field for:
-            - barcode,
-            - item_id,
-            - location, and
-            - callnumber. """
-        ( items, return_items_data ) = ( record.get_fields(u'945') or [], [] )
+              barcode, callnumber, item_id, itype, location, & status """
+        return_items_data = []
         for item in items:
-            barcode = self.make_945_barcode( item  )
-            item_id = item[u'y'].lstrip(u'.')
-            location = item[u'l'].strip()
-            callnumber = item[u'c']  #This seems to be the second half of the callnumber only.
-            return_items_data.append( dict(barcode=barcode, item_id=item_id, location=location, callnumber=callnumber) )
+            items_dict = dict(
+                barcode=self.make_945_barcode( item  ),
+                item_id=item[u'y'].lstrip(u'.'),
+                location=item[u'l'].strip(),
+                callnumber=item[u'c'],  #This seems to be the second half of the callnumber only
+                status=item[u's'].strip(),
+                itype=item[u't'].strip()
+                )
+            return_items_data.append( self.interpret_itemsdict(items_dict) )
         self.logger.debug( u'in z3950_wrapper.Searcher.make_items_data(); return_items_data, `%s`' % return_items_data )
         return return_items_data
 
@@ -190,6 +192,12 @@ class Searcher( object ):
         if barcode is not None:
             barcode = barcode.replace(u' ', u'')
         return barcode
+
+    def interpret_itemsdict( self, dct ):
+        dct[u'location_interpreted'] = u'coming'
+        dct[u'status_interpreted'] = u'coming'
+        dct[u'itype_interpreted'] = u'coming'
+        return dct
 
     def make_lccn( self, marc_dict ):
         lccn = u'lccn_not_available'
