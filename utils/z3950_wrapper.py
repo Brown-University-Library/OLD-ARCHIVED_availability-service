@@ -177,15 +177,19 @@ class Searcher( object ):
             - callnumber. """
         ( items, return_items_data ) = ( record.get_fields(u'945') or [], [] )
         for item in items:
-            barcode = item[u'i']
-            if barcode is not None:
-                barcode = barcode.replace(u' ', u'')
+            barcode = self.make_945_barcode( item  )
             item_id = item[u'y'].lstrip(u'.')
             location = item[u'l'].strip()
             callnumber = item[u'c']  #This seems to be the second half of the callnumber only.
             return_items_data.append( dict(barcode=barcode, item_id=item_id, location=location, callnumber=callnumber) )
         self.logger.debug( u'in z3950_wrapper.Searcher.make_items_data(); return_items_data, `%s`' % return_items_data )
         return return_items_data
+
+    def make_945_barcode( self, item ):
+        barcode = item[u'i']
+        if barcode is not None:
+            barcode = barcode.replace(u' ', u'')
+        return barcode
 
     def make_lccn( self, marc_dict ):
         lccn = u'lccn_not_available'
