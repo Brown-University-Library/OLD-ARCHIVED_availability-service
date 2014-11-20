@@ -84,7 +84,7 @@ class SearcherTest( unittest.TestCase ):
         ## items_data
         item = item_list[0]
         self.assertEqual( list, type(item[u'items_data']) )
-        expected = {'status': u'm', 'callnumber': None, u'location_interpreted': u'coming', 'itype': u'0', 'location': u'rock', u'itype_interpreted': u'coming', 'item_id': u'i108833446', 'barcode': u'31236080511101', u'status_interpreted': u'coming'}
+        expected = {'status': u'm', 'callnumber': None, u'location_interpreted': u'coming', 'itype': u'0', 'location': u'rock', u'itype_interpreted': u'coming', 'item_id': u'i108833446', u'callnumber_interpreted': u'CT275.P648 A33 None', 'barcode': u'31236080511101', u'status_interpreted': u'coming'}
         self.assertEqual( expected, item[u'items_data'][0] )
 
     def test_journal_bib(self):
