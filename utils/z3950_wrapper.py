@@ -204,7 +204,9 @@ class Searcher( object ):
         """ Adds interpreted full callnumber for possible need to match on holdings data. """
         self.logger.debug( u'in z3950_wrapper.Searcher.build_full_callnumber(); callnumber_suffix, `%s`' % callnumber_suffix )
         self.logger.debug( u'in z3950_wrapper.Searcher.build_full_callnumber(); nine_oh_obj, `%s`' % nine_oh_obj )
-        full_callnumber = u'%s %s %s' % ( nine_oh_obj[0][u'a'], nine_oh_obj[0][u'b'], callnumber_suffix )
+        full_callnumber = u''
+        if nine_oh_obj:
+            full_callnumber = u'%s %s %s' % ( nine_oh_obj[0][u'a'], nine_oh_obj[0][u'b'], callnumber_suffix )
         return full_callnumber
 
     def make_lccn( self, marc_dict ):
