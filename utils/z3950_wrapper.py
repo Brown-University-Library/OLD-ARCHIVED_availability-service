@@ -127,6 +127,18 @@ class Searcher( object ):
         self.logger.debug( u'in z3950_wrapper.Searcher.process_resultset, pprint.pformat(item_list), `%s`' % pprint.pformat(item_list) )
         return item_list
 
+    # def process_holdings_data( self, holdings_data ):
+    #     record_holdings_data = []
+    #     for holdings_entry in holdings_data:
+    #         entry = {}
+    #         holdings_object = holdings_entry[1]
+    #         entry[u'callNumber'] = holdings_object.callNumber
+    #         entry[u'localLocation'] = holdings_object.localLocation
+    #         entry[u'publicNote'] = holdings_object.publicNote
+    #         record_holdings_data.append( entry )
+    #     self.logger.debug( u'in z3950_wrapper.Searcher.process_holdings_data, pprint.pformat(record_holdings_data), `%s`' % pprint.pformat(record_holdings_data) )
+    #     return record_holdings_data
+
     def process_holdings_data( self, holdings_data ):
         record_holdings_data = []
         for holdings_entry in holdings_data:
@@ -134,7 +146,10 @@ class Searcher( object ):
             holdings_object = holdings_entry[1]
             entry[u'callNumber'] = holdings_object.callNumber
             entry[u'localLocation'] = holdings_object.localLocation
-            entry[u'publicNote'] = holdings_object.publicNote
+            try:
+                entry[u'publicNote'] = holdings_object.publicNote
+            except AttributeError:
+                entry[u'publicNote'] = None
             record_holdings_data.append( entry )
         self.logger.debug( u'in z3950_wrapper.Searcher.process_holdings_data, pprint.pformat(record_holdings_data), `%s`' % pprint.pformat(record_holdings_data) )
         return record_holdings_data
